@@ -1,0 +1,292 @@
+CREATE DATABASE IF NOT EXISTS PROJECT11_HYBRID_SCD_DB;
+
+CREATE SCHEMA IF NOT EXISTS
+PROJECT11_HYBRID_SCD_DB.CUSTOMER_SCHEMA;
+
+USE DATABASE PROJECT11_HYBRID_SCD_DB;
+
+USE SCHEMA CUSTOMER_SCHEMA;
+
+SELECT CURRENT_DATABASE(), CURRENT_SCHEMA();
+
+
+CREATE OR REPLACE TABLE DIM_CUSTOMER_HYBRID
+(
+    CUSTOMER_KEY INTEGER AUTOINCREMENT,
+    CUSTOMER_ID INTEGER,
+    CUSTOMER_NAME VARCHAR,
+    CITY VARCHAR,
+    PREVIOUS_CITY VARCHAR,
+    STATE VARCHAR,
+    CURRENT_MEMBERSHIP VARCHAR,
+    PREVIOUS_MEMBERSHIP VARCHAR,
+    HISTORICAL_MEMBERSHIP VARCHAR,
+    SEGMENT VARCHAR,
+    EFFECTIVE_DATE DATE,
+    EXPIRY_DATE DATE,
+    IS_CURRENT BOOLEAN
+);
+
+
+CREATE OR REPLACE FILE FORMAT CUSTOMER_CSV_FORMAT
+TYPE = 'CSV'
+FIELD_DELIMITER = ','
+SKIP_HEADER = 1
+FIELD_OPTIONALLY_ENCLOSED_BY = '"'
+NULL_IF = ('NULL', 'null', '');
+
+
+INSERT INTO DIM_CUSTOMER_HYBRID
+(
+    CUSTOMER_ID,
+    CUSTOMER_NAME,
+    CITY,
+    PREVIOUS_CITY,
+    STATE,
+    CURRENT_MEMBERSHIP,
+    PREVIOUS_MEMBERSHIP,
+    HISTORICAL_MEMBERSHIP,
+    SEGMENT,
+    EFFECTIVE_DATE,
+    EXPIRY_DATE,
+    IS_CURRENT
+)
+VALUES
+(
+    101,
+    'Amit Sharma',
+    'Hyderabad',
+    NULL,
+    'Telangana',
+    'Silver',
+    NULL,
+    'Silver',
+    'Regular',
+    '2026-01-01',
+    '9999-12-31',
+    TRUE
+),
+(
+    102,
+    'Priya Reddy',
+    'Warangal',
+    NULL,
+    'Telangana',
+    'Gold',
+    NULL,
+    'Gold',
+    'Premium',
+    '2026-01-01',
+    '9999-12-31',
+    TRUE
+),
+(
+    103,
+    'Rahul Verma',
+    'Vijayawada',
+    NULL,
+    'Andhra Pradesh',
+    'Silver',
+    NULL,
+    'Silver',
+    'Regular',
+    '2026-01-01',
+    '9999-12-31',
+    TRUE
+),
+(
+    104,
+    'Neha Patel',
+    'Hyderabad',
+    NULL,
+    'Telangana',
+    'Gold',
+    NULL,
+    'Gold',
+    'Premium',
+    '2026-01-01',
+    '9999-12-31',
+    TRUE
+),
+(
+    105,
+    'Arjun Gupta',
+    'Nagpur',
+    NULL,
+    'Maharashtra',
+    'Bronze',
+    NULL,
+    'Bronze',
+    'Regular',
+    '2026-01-01',
+    '9999-12-31',
+    TRUE
+);
+
+
+UPDATE DIM_CUSTOMER_HYBRID
+SET
+    EXPIRY_DATE = '2026-03-31',
+    IS_CURRENT = FALSE
+WHERE CUSTOMER_ID = 101
+AND IS_CURRENT = TRUE;
+
+
+INSERT INTO DIM_CUSTOMER_HYBRID
+(
+    CUSTOMER_ID,
+    CUSTOMER_NAME,
+    CITY,
+    PREVIOUS_CITY,
+    STATE,
+    CURRENT_MEMBERSHIP,
+    PREVIOUS_MEMBERSHIP,
+    HISTORICAL_MEMBERSHIP,
+    SEGMENT,
+    EFFECTIVE_DATE,
+    EXPIRY_DATE,
+    IS_CURRENT
+)
+VALUES
+(
+    101,
+    'Amit Sharma',
+    'Bengaluru',
+    'Hyderabad',
+    'Karnataka',
+    'Silver',
+    NULL,
+    'Silver',
+    'Regular',
+    '2026-04-01',
+    '9999-12-31',
+    TRUE
+);
+
+
+
+UPDATE DIM_CUSTOMER_HYBRID
+SET
+    EXPIRY_DATE = '2026-04-30',
+    IS_CURRENT = FALSE
+WHERE CUSTOMER_ID = 102
+AND IS_CURRENT = TRUE;
+
+
+INSERT INTO DIM_CUSTOMER_HYBRID
+(
+    CUSTOMER_ID,
+    CUSTOMER_NAME,
+    CITY,
+    PREVIOUS_CITY,
+    STATE,
+    CURRENT_MEMBERSHIP,
+    PREVIOUS_MEMBERSHIP,
+    HISTORICAL_MEMBERSHIP,
+    SEGMENT,
+    EFFECTIVE_DATE,
+    EXPIRY_DATE,
+    IS_CURRENT
+)
+VALUES
+(
+    102,
+    'Priya Reddy',
+    'Warangal',
+    NULL,
+    'Telangana',
+    'Platinum',
+    'Gold',
+    'Gold -> Platinum',
+    'Premium',
+    '2026-05-01',
+    '9999-12-31',
+    TRUE
+);
+
+
+
+UPDATE DIM_CUSTOMER_HYBRID
+SET
+    EXPIRY_DATE = '2026-05-31',
+    IS_CURRENT = FALSE
+WHERE CUSTOMER_ID = 103
+AND IS_CURRENT = TRUE;
+
+
+INSERT INTO DIM_CUSTOMER_HYBRID
+(
+    CUSTOMER_ID,
+    CUSTOMER_NAME,
+    CITY,
+    PREVIOUS_CITY,
+    STATE,
+    CURRENT_MEMBERSHIP,
+    PREVIOUS_MEMBERSHIP,
+    HISTORICAL_MEMBERSHIP,
+    SEGMENT,
+    EFFECTIVE_DATE,
+    EXPIRY_DATE,
+    IS_CURRENT
+)
+VALUES
+(
+    103,
+    'Rahul Verma',
+    'Chennai',
+    'Vijayawada',
+    'Tamil Nadu',
+    'Gold',
+    'Silver',
+    'Silver -> Gold',
+    'Premium',
+    '2026-06-01',
+    '9999-12-31',
+    TRUE
+);
+
+
+
+SELECT
+    CUSTOMER_KEY,
+    CUSTOMER_ID,
+    CUSTOMER_NAME,
+    CITY,
+    PREVIOUS_CITY,
+    STATE,
+    CURRENT_MEMBERSHIP,
+    PREVIOUS_MEMBERSHIP,
+    HISTORICAL_MEMBERSHIP,
+    SEGMENT,
+    EFFECTIVE_DATE,
+    EXPIRY_DATE,
+    IS_CURRENT
+FROM DIM_CUSTOMER_HYBRID
+ORDER BY CUSTOMER_ID, EFFECTIVE_DATE;
+
+
+
+SELECT COUNT(*) AS TOTAL_RECORDS
+FROM DIM_CUSTOMER_HYBRID;
+
+
+
+SELECT COUNT(*) AS CURRENT_RECORDS
+FROM DIM_CUSTOMER_HYBRID
+WHERE IS_CURRENT = TRUE;
+
+
+
+SELECT COUNT(*) AS HISTORICAL_RECORDS
+FROM DIM_CUSTOMER_HYBRID
+WHERE IS_CURRENT = FALSE;
+
+
+
+SELECT
+    COUNT(*) AS TOTAL_RECORDS,
+    COUNT_IF(IS_CURRENT = TRUE) AS CURRENT_RECORDS,
+    COUNT_IF(IS_CURRENT = FALSE) AS HISTORICAL_RECORDS
+FROM DIM_CUSTOMER_HYBRID;
+
+
