@@ -1,9 +1,3 @@
--- ============================================================
--- PROJECT 14A: E-Commerce Web Event Analytics
--- Data Lake vs Data Warehouse
--- Environment: Snowflake SQL
--- ============================================================
-
 
 USE DATABASE SNOWFLAKE_LEARNING_DB;
 USE SCHEMA PROJECT14A;
