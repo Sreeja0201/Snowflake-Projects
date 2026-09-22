@@ -4,17 +4,12 @@
 -- Environment: Snowflake SQL
 -- ============================================================
 
--- ============================================================
--- DATABASE / SCHEMA SETUP
--- ============================================================
 
 USE DATABASE SNOWFLAKE_LEARNING_DB;
 USE SCHEMA PROJECT14A;
 
 
--- ============================================================
--- TASK 1: STAGING RAW EVENTS
--- ============================================================
+
 
 CREATE OR REPLACE TABLE STAGE_RAW_EVENTS (
     RAW_RECORD_TEXT VARCHAR,
@@ -22,7 +17,6 @@ CREATE OR REPLACE TABLE STAGE_RAW_EVENTS (
 );
 
 
--- Load all 12 raw records, including the malformed record.
 
 INSERT INTO STAGE_RAW_EVENTS (RAW_RECORD_TEXT)
 SELECT column1
@@ -53,10 +47,6 @@ FROM VALUES
 ('INVALID_JSON_PAYLOAD_MALFORMED_STRING');
 
 
--- ============================================================
--- TASK 1: DATA LAKE INGESTION
--- ============================================================
-
 CREATE OR REPLACE TABLE LAKE_RAW_EVENTS (
     RAW_DATA VARIANT,
     INGESTED_AT TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP()
@@ -68,9 +58,6 @@ FROM STAGE_RAW_EVENTS
 WHERE TRY_PARSE_JSON(RAW_RECORD_TEXT) IS NOT NULL;
 
 
--- ============================================================
--- TASK 2: SCHEMA-ON-READ EXTRACTION
--- ============================================================
 
 SELECT
     RAW_DATA:event_id::STRING AS EVENT_ID,
@@ -82,10 +69,6 @@ SELECT
 FROM LAKE_RAW_EVENTS
 ORDER BY EVENT_TIME, EVENT_ID;
 
-
--- ============================================================
--- TASK 3: FINANCIAL ANALYSIS
--- ============================================================
 
 SELECT
     RAW_DATA:event_id::STRING AS EVENT_ID,
@@ -123,10 +106,6 @@ WHERE RAW_DATA:order.total::NUMBER(18,2) > 0
 
 ORDER BY EVENT_ID;
 
-
--- ============================================================
--- TASK 4: FUNNEL & CONVERSION KPIs
--- ============================================================
 
 SELECT
     COUNT(*) AS TOTAL_EVENTS,
@@ -188,10 +167,6 @@ SELECT
 
 FROM LAKE_RAW_EVENTS;
 
-
--- ============================================================
--- TASK 5: DATA WAREHOUSE - SCHEMA-ON-WRITE
--- ============================================================
 
 CREATE OR REPLACE TABLE DW_STRUCTURED_EVENTS (
     EVENT_ID        VARCHAR(50),
@@ -294,10 +269,6 @@ SELECT
 FROM LAKE_RAW_EVENTS;
 
 
--- ============================================================
--- TASK 6: ERROR QUARANTINE
--- ============================================================
-
 CREATE OR REPLACE TABLE QUARANTINE_RAW_EVENTS (
     QUARANTINE_ID NUMBER AUTOINCREMENT,
     RAW_RECORD_TEXT VARCHAR,
@@ -320,23 +291,17 @@ FROM STAGE_RAW_EVENTS
 WHERE TRY_PARSE_JSON(RAW_RECORD_TEXT) IS NULL;
 
 
--- ============================================================
--- VALIDATION QUERIES
--- ============================================================
 
--- Task 1 validation
 SELECT COUNT(*) AS TOTAL_RAW_RECORD_CT
 FROM LAKE_RAW_EVENTS;
 
 
--- Task 5 validation
 SELECT
     COUNT(*) AS STORED_RECORDS_QTY,
     SUM(NET_REVENUE) AS TOTAL_NET_REVENUE
 FROM DW_STRUCTURED_EVENTS;
 
 
--- Task 6 validation
 SELECT
     QUARANTINE_ID,
     RAW_RECORD_TEXT,
@@ -345,7 +310,6 @@ FROM QUARANTINE_RAW_EVENTS
 ORDER BY QUARANTINE_ID;
 
 
--- Final project validation
 SELECT
     (SELECT COUNT(*) FROM LAKE_RAW_EVENTS) AS LAKE_RECORDS,
     (SELECT COUNT(*) FROM DW_STRUCTURED_EVENTS) AS DW_RECORDS,
